@@ -33,8 +33,13 @@ $(document).ready(function () {
   var basicOption = {
     title: {
       display: true,
-      text: 'Temperature & Flow Rate 10',
-      fontSize: 36
+      text: 'Temperature & Flow Rate ', //+ process.env.CUSTOMER,
+      fontSize: 24
+    },
+     subtitle: {
+      display: true,
+      text: 'Temperature & Flow Rate ', //+ process.env.CUSTOMER,
+      fontSize: 24
     },
     scales: {
       yAxes: [{
@@ -74,6 +79,7 @@ $(document).ready(function () {
   ws.onopen = function () {
     console.log('Successfully connect WebSocket!!!');
   }
+  // Websocket receive --------------------------------
   ws.onmessage = function (message) {
     console.log('receive message' + message.data);
     
@@ -82,8 +88,14 @@ $(document).ready(function () {
       if(!obj.time || !obj.temperature) {
         //return;
       }
-      console.log('obj: ' + obj.d.Temperature);
-
+      //console.log('obj: ' + obj.d.customer);
+      
+      var cdat = document.getElementById("myData");
+      var ctxdat = cdat.getContext("2d");
+      ctxdat.font = "24px Arial";
+      ctxdat.clearRect(0, 0, 400, 150);
+      ctxdat.fillText("Temperature: " + obj.d.Temperature.toFixed(2),10,50);
+      ctxdat.fillText("FlowRate: " + obj.d.FlowRate.toFixed(2),10,100);
       
       timeData.push(obj.time);
       temperatureData.push(obj.d.Temperature);
