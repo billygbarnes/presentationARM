@@ -33,7 +33,7 @@ $(document).ready(function () {
   var basicOption = {
     title: {
       display: true,
-      text: 'Temperature & Flow Rate ', //+ process.env.CUSTOMER,
+      text: 'Temperature & Flow Rate 37', //+ process.env.CUSTOMER,
       fontSize: 24
     },
      subtitle: {
