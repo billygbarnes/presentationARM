@@ -33,7 +33,7 @@ $(document).ready(function () {
   var basicOption = {
     title: {
       display: true,
-      text: 'Temperature & Flow Rate 2', //+ process.env.CUSTOMER,
+      text: 'Temperature & Flow Rate db0.6', //+ process.env.CUSTOMER,
       fontSize: 24
     },
      subtitle: {
@@ -72,16 +72,59 @@ $(document).ready(function () {
     options: basicOption
   });
 
+      var cdat = document.getElementById("myData");
+      var ctxdat = cdat.getContext("2d");
+      ctxdat.font = "24px Arial";
+      ctxdat.clearRect(0, 0, 400, 150);
+      ctxdat.fillText("Temperature: ",10,50);
+      ctxdat.fillText("FlowRate: ",10,100);
+      
+      var cdat2 = document.getElementById("dbData");
+      var ctxdat2 = cdat2.getContext("2d");
+      ctxdat2.font = "24px Arial";
+      ctxdat2.clearRect(0, 0, 600, 150);
+      ctxdat2.fillText("dbTemperature: ",10,50);
+      ctxdat2.fillText("dbFlowRate: ",10,100);
+      
+      var request = new XMLHttpRequest();
+      request.open('GET', 'https://gwapisvc-abbarmkv2.azurewebsites.net/livedata', true);
+      
+      request.onload = function () {
+        
+        console.log("GET response!!!");
+        var data = JSON.parse(this.response);
+        console.log(data.FlowRate);
+        ctxdat2.clearRect(0, 0, 600, 150);
+        ctxdat2.fillText("dbTemperature:  " + data.Temperature.value.toFixed(2),10,50);
+        ctxdat2.fillText("dbFlowRate:  " + data.FlowRate.value.toFixed(2),10,100);
+        // data.forEach(d => {
+        //   console.log(d)
+        // });  
+              
+      }
+      request.send();
+      
+      
+      
   var warningRaised = false;
   var errorRaised = false;
+
+
+
 
   var ws = new WebSocket('wss://' + location.host);
   ws.onopen = function () {
     console.log('Successfully connect WebSocket!!!');
   }
+  
+  
+  
   // Websocket receive --------------------------------
   ws.onmessage = function (message) {
     console.log('receive message' + message.data);
+    
+    request.open('GET', 'https://gwapisvc-abbarmkv2.azurewebsites.net/livedata', true);
+    request.send();
     
     try {
       var obj = JSON.parse(message.data);

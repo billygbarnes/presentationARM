@@ -7,6 +7,8 @@ const iotHubClient = require('./IoThub/iot-hub.js');
 
 const app = express();
 
+console.log("presentation-XX: starting....3");
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(function (req, res/*, next*/) {
   res.redirect('/');
@@ -29,10 +31,13 @@ wss.broadcast = function broadcast(data) {
   });
 };
 
+console.log("Creating IoT Hub client...");
 var iotHubReader = new iotHubClient(process.env['Azure.IoT.IoTHub.ConnectionString'], process.env['Azure.IoT.IoTHub.ConsumerGroup']);
+//var iotHubReader = new iotHubClient("1234", process.env['Azure.IoT.IoTHub.ConsumerGroup']);
+console.log("...startReadMessage");
 iotHubReader.startReadMessage(function (obj, date) {
   try {
-    console.log(date);
+    console.log("startReadMessage: " + date);
     date = date || Date.now()
     wss.broadcast(JSON.stringify(Object.assign(obj, { time: moment.utc(date).format('YYYY:MM:DD[T]hh:mm:ss') })));
   } catch (err) {
@@ -42,6 +47,8 @@ iotHubReader.startReadMessage(function (obj, date) {
 });
 
 var port = normalizePort(process.env.PORT || '3000');
+//var port = normalizePort('3000');
+
 server.listen(port, function listening() {
   console.log('Listening on %d', server.address().port);
 });
