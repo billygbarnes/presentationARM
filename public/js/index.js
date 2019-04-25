@@ -86,8 +86,9 @@ $(document).ready(function () {
       ctxdat2.fillText("dbTemperature: ",10,50);
       ctxdat2.fillText("dbFlowRate: ",10,100);
       
+      var apiURL = "https://" + process.env.apiName + ".azurewebsites.net/livedata"
       var request = new XMLHttpRequest();
-      request.open('GET', 'https://gwapisvc-abbarmkv2.azurewebsites.net/livedata', true);
+      request.open('GET', apiURL, true);
       
       request.onload = function () {
         
@@ -103,27 +104,23 @@ $(document).ready(function () {
               
       }
       request.send();
-      
-      
+            
       
   var warningRaised = false;
   var errorRaised = false;
-
-
-
+  
 
   var ws = new WebSocket('wss://' + location.host);
   ws.onopen = function () {
     console.log('Successfully connect WebSocket!!!');
   }
-  
-  
+    
   
   // Websocket receive --------------------------------
   ws.onmessage = function (message) {
     console.log('receive message' + message.data);
     
-    request.open('GET', 'https://gwapisvc-abbarmkv2.azurewebsites.net/livedata', true);
+    request.open('GET', apiURL, true);
     request.send();
     
     try {
@@ -154,20 +151,6 @@ $(document).ready(function () {
 
       myLineChart.update();
 
-
-      if (!warningRaised && obj.temperature>25){
-        console.log('Warning!');
-        alertify.warning('Warning! Temperature reached ' + obj.temperature );
-        warningRaised = true;
-      }
-
-      if (!errorRaised && obj.temperature>27){
-        alertify.error('Temperature reached @ High of ' +obj.temperature );
-        errorRaised = true;
-        
-        alertify.alert("FNOL Raised","Due to high temperature, First Notification of Loss Raised, <br/> Please note claim number is <b>TMP0934586M.</b>  ");
-
-      }
       
     } catch (err) {
       console.error(err);
