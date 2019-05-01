@@ -17,6 +17,7 @@ app.use(function (req, res/*, next*/) {
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+
 // Broadcast to all.
 wss.broadcast = function broadcast(data) {
   wss.clients.forEach(function each(client) {
@@ -31,15 +32,51 @@ wss.broadcast = function broadcast(data) {
   });
 };
 
+
+const https = require('https');
+
+function dbData(){
+  var apiURL = "https://" + process.env.apiName + ".azurewebsites.net/livedata";
+  https.get(apiURL, (resp) => {
+  var data = '';
+
+  // A chunk of data has been recieved.
+  resp.on('data', (chunk) => {
+    data += chunk;
+  });
+
+  // The whole response has been received.
+  resp.on('end', () => {
+    console.log("\nhttps.get3: ***************************************");
+    //console.log(JSON.parse(data).explanation);
+
+    
+    var obj3 = JSON.parse(data);
+    obj3 = Object.assign(obj3, { dataSource: 'api'});
+
+    wss.broadcast(JSON.stringify(obj3));
+  });
+
+}).on("error", (err) => {
+  console.log("Error: " + err.message);
+});
+  
+}
+
 console.log("Creating IoT Hub client...");
 var iotHubReader = new iotHubClient(process.env['Azure.IoT.IoTHub.ConnectionString'], process.env['Azure.IoT.IoTHub.ConsumerGroup']);
 //var iotHubReader = new iotHubClient("1234", process.env['Azure.IoT.IoTHub.ConsumerGroup']);
 console.log("...startReadMessage");
 iotHubReader.startReadMessage(function (obj, date) {
   try {
+    //wss.broadcast('src=' + process.env.apiName);
+    dbData();
+
     console.log("startReadMessage: " + date);
-    date = date || Date.now()
-    wss.broadcast(JSON.stringify(Object.assign(obj, { time: moment.utc(date).format('YYYY:MM:DD[T]hh:mm:ss') })));
+    date = date || Date.now();
+    var obj2 = Object.assign(obj, { dataSource: 'mqtt'});
+    
+    wss.broadcast(JSON.stringify(Object.assign(obj2, { time: moment.utc(date).format('YYYY:MM:DD[T]hh:mm:ss') })));
   } catch (err) {
     console.log(obj);
     console.error(err);

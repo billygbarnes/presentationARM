@@ -33,7 +33,7 @@ $(document).ready(function () {
   var basicOption = {
     title: {
       display: true,
-      text: process.env.companyName + 'Temperature & Flow Rate', //+ process.env.CUSTOMER,
+      text: 'MQTT Data 13', //+ process.env.CUSTOMER,
       fontSize: 24
     },
      subtitle: {
@@ -85,29 +85,8 @@ $(document).ready(function () {
       ctxdat2.clearRect(0, 0, 600, 150);
       ctxdat2.fillText("dbTemperature: ",10,50);
       ctxdat2.fillText("dbFlowRate: ",10,100);
-      
-      var apiURL = "https://" + process.env.apiName + ".azurewebsites.net/livedata"
-      var request = new XMLHttpRequest();
-      request.open('GET', apiURL, true);
-      
-      request.onload = function () {
-        
-        console.log("GET response!!!");
-        var data = JSON.parse(this.response);
-        console.log(data.FlowRate);
-        ctxdat2.clearRect(0, 0, 600, 150);
-        ctxdat2.fillText("dbTemperature:  " + data.Temperature.value.toFixed(2),10,50);
-        ctxdat2.fillText("dbFlowRate:  " + data.FlowRate.value.toFixed(2),10,100);
-        // data.forEach(d => {
-        //   console.log(d)
-        // });  
-              
-      }
-      request.send();
-            
-      
-  var warningRaised = false;
-  var errorRaised = false;
+                  
+     
   
 
   var ws = new WebSocket('wss://' + location.host);
@@ -118,38 +97,47 @@ $(document).ready(function () {
   
   // Websocket receive --------------------------------
   ws.onmessage = function (message) {
-    console.log('receive message' + message.data);
     
-    request.open('GET', apiURL, true);
-    request.send();
+    console.log('receive message: ' + message.data);
+    
     
     try {
       var obj = JSON.parse(message.data);
-      if(!obj.time || !obj.temperature) {
-        //return;
+      if(obj.dataSource == 'mqtt')
+      {
+        
+        console.log("MQTT MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
+        
+        var cdat = document.getElementById("myData");
+        var ctxdat = cdat.getContext("2d");
+        ctxdat.font = "24px Arial";
+        ctxdat.clearRect(0, 0, 400, 150);
+        ctxdat.fillText("Temperature: " + obj.d.Temperature.toFixed(2),10,50);
+        ctxdat.fillText("FlowRate: " + obj.d.FlowRate.toFixed(2),10,100);
+        
+        timeData.push(obj.time);
+        temperatureData.push(obj.d.Temperature);
+        FlowRateData.push(obj.d.FlowRate);
+        // only keep no more than 50 points in the line chart
+        const maxLen = 50;
+        var len = timeData.length;
+        if (len > maxLen) {
+          timeData.shift();
+          temperatureData.shift();
+          FlowRateData.shift();
+        }
+  
+        myLineChart.update();        
       }
-      //console.log('obj: ' + obj.d.customer);
-      
-      var cdat = document.getElementById("myData");
-      var ctxdat = cdat.getContext("2d");
-      ctxdat.font = "24px Arial";
-      ctxdat.clearRect(0, 0, 400, 150);
-      ctxdat.fillText("Temperature: " + obj.d.Temperature.toFixed(2),10,50);
-      ctxdat.fillText("FlowRate: " + obj.d.FlowRate.toFixed(2),10,100);
-      
-      timeData.push(obj.time);
-      temperatureData.push(obj.d.Temperature);
-      FlowRateData.push(obj.d.FlowRate);
-      // only keep no more than 50 points in the line chart
-      const maxLen = 50;
-      var len = timeData.length;
-      if (len > maxLen) {
-        timeData.shift();
-        temperatureData.shift();
-        FlowRateData.shift();
+      else {        
+        console.log("DB DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
+        //database
+        var data = JSON.parse(message.data);
+        ctxdat2.clearRect(0, 0, 600, 150);
+        ctxdat2.fillText("dbTemperature:  " + data.Temperature.value.toFixed(2),10,50);
+        ctxdat2.fillText("dbFlowRate:  " + data.FlowRate.value.toFixed(2),10,100);
       }
 
-      myLineChart.update();
 
       
     } catch (err) {
